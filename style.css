@@ -396,31 +396,47 @@ main .glass:hover {
 
 
 /* Capturas reales de la app, recortadas para quitar la barra de estado y la de
-   navegación del sistema. El alto se fija con aspect-ratio para que el hueco no
-   salte mientras cargan. */
+   navegación del sistema. Van en una tira horizontal con scroll-snap: se pasan
+   con el dedo, la rueda o el teclado, y en pantallas anchas caben las cuatro a
+   la vez, sin nada que pasar. El alto de cada captura se ata a la altura de la
+   ventana para que la sección siguiente siempre asome por debajo. */
 .shots {
-  max-width: 520px;
-  margin: 28px auto 0;
+  position: relative;
+  margin-top: 28px;
 }
 
 .shot-row {
-  display: grid;
-  grid-template-columns: 48px minmax(0, 1fr) 48px;
-  gap: 8px;
-  align-items: center;
+  position: relative;
 }
 
+.shot-stage {
+  --shot-w: min(220px, calc((100vh - 220px) * 760 / 1537), 62vw);
+  display: flex;
+  gap: 16px;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+  scroll-padding-inline: 0;
+  scrollbar-width: none;
+  padding: 4px 2px 8px;
+  border-radius: var(--radius);
+}
+
+.shot-stage::-webkit-scrollbar { display: none; }
+
 .shot-stage figure {
+  flex: 1 0 calc(var(--shot-w) + 32px);
+  min-width: calc(var(--shot-w) + 32px);
   margin: 0;
   padding: 16px 16px 4px;
   text-align: center;
+  scroll-snap-align: center;
 }
-
-.shot-stage figure[hidden] { display: none; }
 
 .shots img {
   display: block;
-  width: min(100%, 280px);
+  width: var(--shot-w);
+  max-width: 100%;
   height: auto;
   margin: 0 auto;
   aspect-ratio: 760 / 1537;
@@ -428,59 +444,92 @@ main .glass:hover {
   border: 1px solid var(--bark);
 }
 
+.shots figcaption {
+  padding: 12px 4px 14px;
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+
+/* Flechas y puntos sólo aparecen cuando la tira se desborda (lo decide
+   capturas.js con la clase `is-scroll`). */
+.shot-nav,
+.shot-dots { display: none; }
+
+.shots.is-scroll .shot-nav,
+.shots.is-scroll .shot-dots { display: flex; }
+
 .shot-nav {
+  position: absolute;
+  top: 50%;
+  z-index: 1;
+  align-items: center;
+  justify-content: center;
   width: 48px;
   height: 48px;
   padding: 0;
   border: 1px solid var(--bark);
   border-radius: 999px;
-  background: rgba(18, 33, 26, 0.72);
+  background: var(--glass-strong);
   color: var(--mist);
   cursor: pointer;
+  transform: translateY(-50%);
+  backdrop-filter: blur(10px);
+  transition: opacity 200ms ease, border-color 200ms ease;
 }
+
+.shot-nav[data-prev] { left: -8px; }
+.shot-nav[data-next] { right: -8px; }
 
 .shot-nav::before {
   content: "";
   display: block;
   width: 9px;
   height: 9px;
-  margin: 0 auto;
   border-left: 2px solid currentColor;
   border-bottom: 2px solid currentColor;
 }
 
-.shot-nav[data-prev]::before { transform: rotate(45deg); margin-left: 20px; }
-.shot-nav[data-next]::before { transform: rotate(-135deg); margin-left: 16px; }
+.shot-nav[data-prev]::before { transform: translateX(2px) rotate(45deg); }
+.shot-nav[data-next]::before { transform: translateX(-2px) rotate(-135deg); }
 
-.shot-nav:hover {
-  border-color: var(--lichen);
-  color: var(--mist);
+.shot-nav:hover { border-color: var(--lichen); }
+
+.shot-nav:disabled {
+  opacity: 0;
+  pointer-events: none;
 }
 
 .shot-dots {
-  display: flex;
   justify-content: center;
-  gap: 10px;
-  margin-top: 14px;
+  gap: 4px;
+  margin-top: 8px;
 }
 
+/* El botón mide 32px para el dedo; el punto que se ve es el ::before. */
 .shot-dots button {
-  width: 11px;
-  height: 11px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
   padding: 0;
   border: 0;
-  border-radius: 999px;
-  background: rgba(231, 237, 231, 0.35);
+  background: none;
   cursor: pointer;
 }
 
-.shot-dots button.is-on,
-.shot-dots button[aria-current="true"] { background: var(--lichen); }
+.shot-dots button::before {
+  content: "";
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: rgba(231, 237, 231, 0.35);
+  transition: background-color 200ms ease, width 200ms ease;
+}
 
-.shots figcaption {
-  padding: 12px 4px 14px;
-  color: var(--muted);
-  font-size: 0.95rem;
+.shot-dots button[aria-current="true"]::before {
+  width: 22px;
+  background: var(--lichen);
 }
 
 /* Botón de la tienda. `.cta-soon` es el mismo botón apagado, mientras la app no esté publicada. */
